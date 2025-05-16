@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./simple-api
+      dockerfile: Dockerfile
+    image: lytwz1/devops-backend:1.0
+    container_name: backend-api
+    restart: unless-stopped
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://database:5432/db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=root
+    networks:
+      - app-network
+    depends_on:
+      - database
+
+  database:
+    build:
+      context: .
+    image: lytwz1/devops-database:1.0
+    container_name: database
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=root
+    networks:
+      - app-network
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  httpd:
+    build:
+      context: ./httpd
+      dockerfile: Dockerfile
+    image: lytwz1/devops-httpd:1.0
+    container_name: httpd
+    ports:
+      - "80:80"
+    networks:
+      - app-network
+    depends_on:
+      - backend
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  db-data:
+    driver: local
+
